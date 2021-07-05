@@ -1,0 +1,6 @@
+[submodule "external/freetype"]
+	path = external/freetype
+	url = https://github.com/krkrz/freetype.git
+[submodule "external/ncbind"]
+	path = external/ncbind
+	url = https://github.com/uyjulian/ncbind.git
