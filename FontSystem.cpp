@@ -35,7 +35,6 @@ bool FontSystem::FontExists( const tjs_string &name ) {
 }
 
 FontSystem::FontSystem() : FontNamesInit(false), DefaultLOGFONTCreated(false) {
-	ConstructDefaultFont();
 }
 
 void FontSystem::ConstructDefaultFont() {
@@ -114,6 +113,7 @@ const tjs_char* FontSystem::GetDefaultFontName() const {
 //---------------------------------------------------------------------------
 void FontSystem::SetDefaultFontName( const tjs_char* name ) {
 	TVPSetDefaultFontName( name );
+	ConstructDefaultFont();
 	DefaultFont.Face = ttstr(TVPGetDefaultFontName());
 }
 //---------------------------------------------------------------------------

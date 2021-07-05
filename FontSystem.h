@@ -47,6 +47,7 @@ public:
 	FontSystem();
 	tjs_string GetBeingFont(tjs_string fonts);
 	const tTVPFont& GetDefaultFont() const {
+		ConstructDefaultFont();
 		return DefaultFont;
 	}
 	bool FontExists( const tjs_string &name );
