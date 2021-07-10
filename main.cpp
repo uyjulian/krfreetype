@@ -640,81 +640,84 @@ public:
 				if (val.Type() == tvtObject)
 				{
 					val_closure = val.AsObjectClosureNoAddRef();
-				}
-			}
-			if (val_closure.Object)
-			{
-				tTJSVariantClosure rresult_closure;
-				{
-					tTJSVariant args[15];
-					args[0] = objthis_val;
+					if (val_closure.Object)
 					{
-						iTJSDispatch2 *rect = TVPCreateRectObject(ClipRect.left, ClipRect.top, ClipRect.right, ClipRect.bottom);
-						args[1] = tTJSVariant(rect, rect);
-						rect->Release();
-					}
-					args[2] = x;
-					args[3] = y;
-					args[4] = text;
-					args[5] = (tTVInteger)color;
-					args[6] = met;
-					args[7] = opa;
-					args[8] = HoldAlpha;
-					args[9] = aa;
-					args[10] = shadowlevel;
-					args[11] = (tTVInteger)shadowcolor;
-					args[12] = shadowwidth;
-					args[13] = shadowofsx;
-					args[14] = shadowofsy;
-					tTJSVariant *pargs[15] = {args +0, args +1, args +2, args +3, args +4, args +5, args +6, args +7, args +8, args +9, args +10, args +11, args +12, args +13, args +14};
-					{
-						tTJSVariant drawtext_val;
-						static ttstr drawText_name(TJS_W("drawText"));
-						val_closure.PropGet(0, drawText_name.c_str(), drawText_name.GetHint(), &drawtext_val, NULL);
-						if (drawtext_val.Type() == tvtObject)
+						tTVPRect update_rect;
 						{
-							tTJSVariant rresult;
-							tTJSVariantClosure drawtext_valclosure = drawtext_val.AsObjectClosure();
-							drawtext_valclosure.FuncCall(0, NULL, 0, &rresult, 15, pargs, NULL);
-							if (rresult.Type() == tvtObject)
+							tTJSVariant args[15];
+							args[0] = objthis_val;
 							{
-								rresult_closure = rresult.AsObjectClosure();
+								iTJSDispatch2 *rect = TVPCreateRectObject(ClipRect.left, ClipRect.top, ClipRect.right, ClipRect.bottom);
+								args[1] = tTJSVariant(rect, rect);
+								rect->Release();
+							}
+							args[2] = x;
+							args[3] = y;
+							args[4] = text;
+							args[5] = (tTVInteger)color;
+							args[6] = met;
+							args[7] = opa;
+							args[8] = HoldAlpha;
+							args[9] = aa;
+							args[10] = shadowlevel;
+							args[11] = (tTVInteger)shadowcolor;
+							args[12] = shadowwidth;
+							args[13] = shadowofsx;
+							args[14] = shadowofsy;
+							tTJSVariant *pargs[15] = {args +0, args +1, args +2, args +3, args +4, args +5, args +6, args +7, args +8, args +9, args +10, args +11, args +12, args +13, args +14};
+							{
+								tTJSVariant drawtext_val;
+								static ttstr drawText_name(TJS_W("drawText"));
+								val_closure.PropGet(0, drawText_name.c_str(), drawText_name.GetHint(), &drawtext_val, NULL);
+								if (drawtext_val.Type() == tvtObject)
+								{
+									tTJSVariant rresult;
+									tTJSVariantClosure drawtext_valclosure = drawtext_val.AsObjectClosureNoAddRef();
+									if (drawtext_valclosure.Object)
+									{
+										drawtext_valclosure.FuncCall(0, NULL, 0, &rresult, 15, pargs, NULL);
+										if (rresult.Type() == tvtObject)
+										{
+											tTJSVariantClosure rresult_closure = rresult.AsObjectClosureNoAddRef();
+											if (rresult_closure.Object)
+											{
+												tTJSVariant val;
+												static ttstr left_name(TJS_W("left"));
+												rresult_closure.PropGet(0, left_name.c_str(), left_name.GetHint(), &val, NULL);
+												update_rect.left = (tjs_int)val;
+												static ttstr top_name(TJS_W("top"));
+												rresult_closure.PropGet(0, top_name.c_str(), top_name.GetHint(), &val, NULL);
+												update_rect.top = (tjs_int)val;
+												static ttstr right_name(TJS_W("right"));
+												rresult_closure.PropGet(0, right_name.c_str(), right_name.GetHint(), &val, NULL);
+												update_rect.right = (tjs_int)val;
+												static ttstr bottom_name(TJS_W("bottom"));
+												rresult_closure.PropGet(0, bottom_name.c_str(), bottom_name.GetHint(), &val, NULL);
+												update_rect.bottom = (tjs_int)val;
+											}
+										}
+									}
+								}
 							}
 						}
-					}
-				}
-				tTVPRect update_rect;
-				if (rresult_closure.Object)
-				{
-					tTJSVariant val;
-					static ttstr left_name(TJS_W("left"));
-					objthis_valclosure.PropGet(0, left_name.c_str(), left_name.GetHint(), &val, NULL);
-					update_rect.left = (tjs_int)val;
-					static ttstr top_name(TJS_W("top"));
-					objthis_valclosure.PropGet(0, top_name.c_str(), top_name.GetHint(), &val, NULL);
-					update_rect.top = (tjs_int)val;
-					static ttstr right_name(TJS_W("right"));
-					objthis_valclosure.PropGet(0, right_name.c_str(), right_name.GetHint(), &val, NULL);
-					update_rect.right = (tjs_int)val;
-					static ttstr bottom_name(TJS_W("bottom"));
-					objthis_valclosure.PropGet(0, bottom_name.c_str(), bottom_name.GetHint(), &val, NULL);
-					update_rect.bottom = (tjs_int)val;
-				}
-				if (ImageLeft != 0 || ImageTop != 0)
-				{
-					update_rect.add_offsets(ImageLeft, ImageTop);
-				}
-				{
-					tTJSVariant args[4];
-					args[0] = (tjs_int)update_rect.left;
-					args[1] = (tjs_int)update_rect.top;
-					args[2] = (tjs_int)update_rect.right;
-					args[3] = (tjs_int)update_rect.bottom;
-					tTJSVariant *pargs[4] = {args +0, args +1, args +2, args +3};
-					if (objthis_valclosure.Object)
-					{
-						static ttstr update_name(TJS_W("update"));
-						val_closure.FuncCall(0, update_name.c_str(), update_name.GetHint(), NULL, 4, pargs, NULL);
+						if (ImageLeft != 0 || ImageTop != 0)
+						{
+							update_rect.add_offsets(ImageLeft, ImageTop);
+						}
+						if (!update_rect.is_empty())
+						{
+							tTJSVariant args[4];
+							args[0] = (tjs_int)update_rect.left;
+							args[1] = (tjs_int)update_rect.top;
+							args[2] = (tjs_int)update_rect.get_width();
+							args[3] = (tjs_int)update_rect.get_height();
+							tTJSVariant *pargs[4] = {args +0, args +1, args +2, args +3};
+							if (objthis_valclosure.Object)
+							{
+								static ttstr update_name(TJS_W("update"));
+								objthis_valclosure.FuncCall(0, update_name.c_str(), update_name.GetHint(), NULL, 4, pargs, NULL);
+							}
+						}
 					}
 				}
 			}
