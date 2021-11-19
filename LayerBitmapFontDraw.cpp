@@ -681,11 +681,11 @@ void DrawTextMultiple(tjs_int bmppitch, tjs_uint8 *bmpdata,
 void DrawText(tjs_int bmppitch, tjs_uint8* bmpdata,
 	tTVPFontInfo *fontinfo,
 	const tTVPRect &destrect, tjs_int x, tjs_int y, const ttstr &text,
-	tjs_uint32 color, tTVPBBBltMethod bltmode, tjs_int opa = 255,
-		bool holdalpha = true, bool aa = true, tjs_int shlevel = 0,
-		tjs_uint32 shadowcolor = 0,
-		tjs_int shwidth = 0, tjs_int shofsx = 0, tjs_int shofsy = 0,
-		tTVPComplexRect *updaterects = NULL)
+	tjs_uint32 color, tTVPBBBltMethod bltmode, tjs_int opa,
+		bool holdalpha, bool aa, tjs_int shlevel,
+		tjs_uint32 shadowcolor,
+		tjs_int shwidth, tjs_int shofsx, tjs_int shofsy,
+		tTVPComplexRect *updaterects)
 {
 	tjs_int len = text.GetLen();
 	if(len == 0) return;
