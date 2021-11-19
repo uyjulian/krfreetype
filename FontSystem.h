@@ -46,7 +46,7 @@ class FontSystem {
 public:
 	FontSystem();
 	tjs_string GetBeingFont(tjs_string fonts);
-	const tTVPFont& GetDefaultFont() const {
+	const tTVPFont& GetDefaultFont() {
 		ConstructDefaultFont();
 		return DefaultFont;
 	}
