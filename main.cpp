@@ -8,9 +8,9 @@
 /////////////////////////////////////////////
 
 #include "ncbind/ncbind.hpp"
-#include <string.h>
-#include <stdio.h>
-#include <math.h>
+#include <cstring>
+#include <cstdio>
+#include <cmath>
 #include "LayerBitmapFontManagement.h"
 #include "FontSystem.h"
 #include "PrerenderedFont.h"
