@@ -8,6 +8,7 @@
 /////////////////////////////////////////////
 
 #include "ncbind/ncbind.hpp"
+#include "tvpgl.h"
 #include <cstring>
 #include <cstdio>
 #include <cmath>
@@ -412,6 +413,7 @@ static iTJSDispatch2 *font_class = NULL;
 
 static void PreRegistCallback()
 {
+	TVPCreateTable();
 	TVPInializeFontRasterizers();
 	iTJSDispatch2 *global = TVPGetScriptDispatch();
 	if (global)
