@@ -10,10 +10,6 @@
 //---------------------------------------------------------------------------
 #include "CharacterSet.h"
 
-// Avoid symbol collision
-#define TVPWideCharToUtf8String TVPWideCharToUtf8String_internal
-#define TVPUtf8ToWideCharString TVPUtf8ToWideCharString_internal
-
 //---------------------------------------------------------------------------
 static tjs_int inline TVPWideCharToUtf8(tjs_char in, char * out)
 {
@@ -94,7 +90,7 @@ static tjs_int inline TVPWideCharToUtf8(tjs_char in, char * out)
 	return -1;
 }
 //---------------------------------------------------------------------------
-static tjs_int TVPWideCharToUtf8String(const tjs_char *in, char * out)
+tjs_int TVPWideCharToUtf8String(const tjs_char *in, char * out)
 {
 	// convert input wide string to output utf-8 string
 	int count = 0;
@@ -194,7 +190,7 @@ static bool inline TVPUtf8ToWideChar(const char * & in, tjs_char *out)
 	return false;
 }
 //---------------------------------------------------------------------------
-static tjs_int TVPUtf8ToWideCharString(const char * in, tjs_char *out)
+tjs_int TVPUtf8ToWideCharString(const char * in, tjs_char *out)
 {
 	// convert input utf-8 string to output wide string
 	int count = 0;
