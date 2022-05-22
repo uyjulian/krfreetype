@@ -1,4 +1,6 @@
 
+INCFLAGS += -Iexternal/simde
+
 SOURCES += main.cpp
 SOURCES += LayerBitmapFontDraw.cpp
 SOURCES += CharacterData.cpp CharacterSet.cpp ComplexRect.cpp cp932_uni.cpp FontSystem.cpp FreeType.cpp MiscUtility.cpp PrerenderedFont.cpp TVPSysFont.cpp uni_cp932.cpp

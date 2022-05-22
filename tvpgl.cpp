@@ -1,6 +1,7 @@
 // Copied tvpgl functions, because we can't rely on the core to have them.
 
 #include "tvpgl.h"
+#include <simde/x86/mmx.h>
 
 static unsigned char TVPOpacityOnOpacityTable[256*256];
 static unsigned char TVPNegativeMulTable[256*256];
@@ -299,42 +300,76 @@ TVP_GL_FUNC_INLINE_DECL(tjs_uint32, TVPAddAlphaBlend_a_d_o, (tjs_uint32 dest, tj
 
 TVP_GL_FUNC_DECL(void, TVPAlphaBlend_c, (tjs_uint32 *dest, const tjs_uint32 *src, tjs_int len))
 {
-	tjs_uint32 d1, s, d, sopa;
-	for(int lu_n = 0; lu_n < len; lu_n++)
+	tjs_uint32   *    v3; // edi
+	const tjs_uint32 *v4; // ebp
+	tjs_uint32 *      v5; // esi
+	tjs_uint32        v6; // eax
+	simde__m64        v8; // mm4
+	simde__m64        v9; // mm1
+
+	if (len > 0)
 	{
+		v3 = dest;
+		v4 = src;
+		v5 = &dest[len];
+		if (dest < v5)
 		{
-			s = *src;
-			src++;
-			d = *dest;
-			sopa = s >> 24u;
-			d1 = d & 0xff00ffu;
-			d1 = (d1 + (((s & 0xff00ffu) - d1) * sopa >> 8u)) & 0xff00ffu;
-			d &= 0xff00u;
-			s &= 0xff00u;
-			*dest = d1 + ((d + ((s - d) * sopa >> 8u)) & 0xff00u);
-			dest++;
+			do
+			{
+				v6 = *v4;
+				if (*v4 < 0xFF000000)
+				{
+					v8  = simde_mm_set1_pi16(v6 >> 24);
+					v9  = simde_m_punpcklbw(simde_mm_cvtsi32_si64(*v3), simde_mm_setzero_si64());
+					*v3 = simde_mm_cvtsi64_si32(
+						simde_m_packuswb(
+							simde_m_paddb(v9, simde_m_psrlwi(simde_m_pmullw(simde_m_psubw(simde_m_punpcklbw(simde_mm_cvtsi32_si64(v6), simde_mm_setzero_si64()), v9), v8), 8u)),
+							simde_mm_setzero_si64()));
+				}
+				else
+				{
+					*v3 = v6;
+				}
+				++v3;
+				++v4;
+			} while (v3 < v5);
 		}
 	}
+	simde_m_empty();
 }
 
 TVP_GL_FUNC_DECL(void, TVPAlphaBlend_HDA_c, (tjs_uint32 *dest, const tjs_uint32 *src, tjs_int len))
 {
-	tjs_uint32 d1, s, d, sopa;
-	for(int lu_n = 0; lu_n < len; lu_n++)
+	int          v3; // ecx
+	tjs_uint32   v4; // eax
+	simde__m64   v6; // mm2
+	simde__m64   v7; // mm4
+	tjs_uint32   v8; // eax
+	simde__m64   v9; // mm1
+
+	if (len - 1 >= 0)
 	{
+		v3 = len - 1;
+		do
 		{
-			s = *src;
-			src++;
-			d = *dest;
-			sopa = s >> 24u;
-			d1 = d & 0xff00ffu;
-			d1 = ((d1 + (((s & 0xff00ffu) - d1) * sopa >> 8u)) & 0xff00ffu) + (d & 0xff000000u); /* hda */
-			d &= 0xff00u;
-			s &= 0xff00u;
-			*dest = d1 + ((d + ((s - d) * sopa >> 8u)) & 0xff00u);
-			dest++;
-		}
+			v4       = src[v3];
+			v6       = simde_mm_cvtsi32_si64(v4);
+			v7       = simde_mm_set1_pi16(v4 >> 24);
+			v8       = dest[v3];
+			v9       = simde_m_punpcklbw(simde_mm_cvtsi32_si64(v8), simde_mm_setzero_si64());
+			dest[v3] = (v8 & 0xFF000000) | (simde_mm_cvtsi64_si32(
+											 simde_m_packuswb(
+												 simde_m_psrlwi(
+													 simde_m_paddw(
+														 simde_m_psllwi(v9, 8u),
+														 simde_m_pmullw(simde_m_psubw(simde_m_punpcklbw(v6, simde_mm_setzero_si64()), v9), v7)),
+													 8u),
+												 simde_mm_setzero_si64())) &
+											 0xFFFFFF);
+			--v3;
+		} while (v3 >= 0);
 	}
+	simde_m_empty();
 }
 
 TVP_GL_FUNC_DECL(void, TVPAlphaBlend_HDA_o_c, (tjs_uint32 *dest, const tjs_uint32 *src, tjs_int len, tjs_int opa))
@@ -379,24 +414,51 @@ TVP_GL_FUNC_DECL(void, TVPAlphaBlend_ao_c, (tjs_uint32 *dest, const tjs_uint32 *
 
 TVP_GL_FUNC_DECL(void, TVPAlphaBlend_d_c, (tjs_uint32 *dest, const tjs_uint32 *src, tjs_int len))
 {
-	tjs_uint32 d1, s, d, sopa, addr, destalpha;
-	for(int lu_n = 0; lu_n < len; lu_n++)
+	tjs_uint32 *      v3;  // edi
+	const tjs_uint32 *v4;  // ebp
+	simde__m64        v5;  // mm7
+	tjs_uint32 *      v6;  // esi
+	int               v7;  // eax
+	simde__m64        v8;  // mm1
+	simde__m64        v10; // mm4
+
+	if (len > 0)
 	{
+		v3 = dest;
+		v4 = src;
+		v5 = simde_mm_cvtsi32_si64(0xFFFFFFu);
+		v6 = &dest[len];
+		if (dest < v6)
 		{
-			s = *src;
-			src++;
-			d = *dest;
-			addr = ((s >> 16u) & 0xff00u) + (d>>24u);
-			destalpha = TVPNegativeMulTable[addr]<<24u;
-			sopa = TVPOpacityOnOpacityTable[addr];
-			d1 = d & 0xff00ffu;
-			d1 = (d1 + (((s & 0xff00ffu) - d1) * sopa >> 8u)) & 0xff00ffu;
-			d &= 0xff00u;
-			s &= 0xff00u;
-			*dest = d1 + ((d + ((s - d) * sopa >> 8u)) & 0xff00u) + destalpha;
-			dest++;
+			do
+			{
+				if (*v4 <= 0xFFFFFF)
+				{
+					++v3;
+					++v4;
+					continue;
+				}
+				v7  = (*v3 >> 24) + ((*v4 >> 16) & 0xFF00);
+				v8  = simde_m_punpcklbw(simde_m_pand(simde_mm_cvtsi32_si64(*v3), v5), simde_mm_setzero_si64());
+				v10 = simde_mm_set1_pi16(TVPOpacityOnOpacityTable[v7]);
+				*v3 = (TVPNegativeMulTable[v7] << 24) | simde_mm_cvtsi64_si32(
+															simde_m_packuswb(
+																simde_m_psrlwi(
+																	simde_m_paddw(
+																		simde_m_psllwi(v8, 8u),
+																		simde_m_pmullw(
+																			simde_m_psubw(
+																				simde_m_punpcklbw(simde_m_pand(simde_mm_cvtsi32_si64(*v4), v5), simde_mm_setzero_si64()),
+																				v8),
+																			v10)),
+																	8u),
+																simde_mm_setzero_si64()));
+				++v3;
+				++v4;
+			} while (v3 < v6);
 		}
 	}
+	simde_m_empty();
 }
 
 TVP_GL_FUNC_DECL(void, TVPAlphaBlend_do_c, (tjs_uint32 *dest, const tjs_uint32 *src, tjs_int len, tjs_int opa))
@@ -423,22 +485,35 @@ TVP_GL_FUNC_DECL(void, TVPAlphaBlend_do_c, (tjs_uint32 *dest, const tjs_uint32 *
 
 TVP_GL_FUNC_DECL(void, TVPAlphaBlend_o_c, (tjs_uint32 *dest, const tjs_uint32 *src, tjs_int len, tjs_int opa))
 {
-	tjs_uint32 d1, s, d, sopa;
-	for(int lu_n = 0; lu_n < len; lu_n++)
+	tjs_uint32   *v4; // edi
+	tjs_uint32   *v5; // ebp
+	tjs_uint32 *  v6; // esi
+	simde__m64    v8; // mm4
+	simde__m64    v9; // mm1
+
+	if (len > 0)
 	{
+		v4 = dest;
+		v5 = (tjs_uint32   *)src;
+		v6 = &dest[len];
+		if (dest < v6)
 		{
-			s = *src;
-			src++;
-			d = *dest;
-			sopa = ((s >> 24u) * opa) >> 8u;
-			d1 = d & 0xff00ffu;
-			d1 = (d1 + (((s & 0xff00ffu) - d1) * sopa >> 8u)) & 0xff00ffu;
-			d &= 0xff00u;
-			s &= 0xff00u;
-			*dest = d1 + ((d + ((s - d) * sopa >> 8u)) & 0xff00u);
-			dest++;
+			do
+			{
+				v8  = simde_mm_set1_pi16((unsigned int)opa * (tjs_uint64)*v5 >> 32);
+				v9  = simde_m_punpcklbw(simde_mm_cvtsi32_si64(*v4), simde_mm_setzero_si64());
+				*v4 = simde_mm_cvtsi64_si32(
+					simde_m_packuswb(
+						simde_m_psrlwi(
+							simde_m_paddw(simde_m_psllwi(v9, 8u), simde_m_pmullw(simde_m_psubw(simde_m_punpcklbw(simde_mm_cvtsi32_si64(*v5), simde_mm_setzero_si64()), v9), v8)),
+							8u),
+						simde_mm_setzero_si64()));
+				++v4;
+				++v5;
+			} while (v4 < v6);
 		}
 	}
+	simde_m_empty();
 }
 
 TVP_GL_FUNC_DECL(void, TVPApplyColorMap_c, (tjs_uint32 *dest, const tjs_uint8 *src, tjs_int len, tjs_uint32 color))
@@ -607,22 +682,32 @@ TVP_GL_FUNC_DECL(void, TVPApplyColorMap_o_c, (tjs_uint32 *dest, const tjs_uint8 
 
 TVP_GL_FUNC_DECL(void, TVPApplyColorMap65_c, (tjs_uint32 *dest, const tjs_uint8 *src, tjs_int len, tjs_uint32 color))
 {
-	tjs_uint32 d1, d, sopa;
-	tjs_uint32 c1 = color & 0xff00ffu;
-	color = color & 0x00ff00u;
-	for(int lu_n = 0; lu_n < len; lu_n++)
+	tjs_uint32   *   v4;  // edi
+	const tjs_uint8 *v5;  // ebp
+	tjs_uint32 *     v6;  // edx
+	simde__m64       v7;  // mm7
+	simde__m64       v9;  // mm4
+	simde__m64       v10; // mm1
+
+	if (len > 0)
 	{
+		v4 = dest;
+		v5 = src;
+		v6 = &dest[len];
+		v7 = simde_m_punpcklbw(simde_mm_cvtsi32_si64(color), simde_mm_setzero_si64());
+		if (dest < v6)
 		{
-			d = *dest;
-			sopa = *src;
-			d1 = d & 0xff00ffu;
-			d1 = ((d1 + ((c1 - d1) * sopa >> 6)) & 0xff00ffu);
-			d &= 0xff00u;
-			*dest = d1 | ((d + ((color - d) * sopa >> 6)) & 0x00ff00u);
-			src++;
-			dest++;
+			do
+			{
+				v9  = simde_mm_set1_pi16(*v5);
+				v10 = simde_m_punpcklbw(simde_mm_cvtsi32_si64(*v4), simde_mm_setzero_si64());
+				*v4 = simde_mm_cvtsi64_si32(simde_m_packuswb(simde_m_paddw(v10, simde_m_psrawi(simde_m_pmullw(simde_m_psubw(v7, v10), v9), 6u)), simde_mm_setzero_si64()));
+				++v4;
+				++v5;
+			} while (v4 < v6);
 		}
 	}
+	simde_m_empty();
 }
 
 TVP_GL_FUNC_DECL(void, TVPApplyColorMap65_HDA_c, (tjs_uint32 *dest, const tjs_uint8 *src, tjs_int len, tjs_uint32 color))
@@ -667,22 +752,37 @@ TVP_GL_FUNC_DECL(void, TVPApplyColorMap65_HDA_o_c, (tjs_uint32 *dest, const tjs_
 
 TVP_GL_FUNC_DECL(void, TVPApplyColorMap65_a_c, (tjs_uint32 *dest, const tjs_uint8 *src, tjs_int len, tjs_uint32 color))
 {
-	tjs_uint32 c1 = color & 0xff00ffu;
-	color = color & 0x00ff00u;
-	for(int lu_n = 0; lu_n < len; lu_n++)
+	tjs_uint32   *   v4;  // edi
+	const tjs_uint8 *v5;  // ebp
+	tjs_uint32 *     v6;  // esi
+	simde__m64       v7;  // mm7
+	simde__m64       v9;  // mm3
+	simde__m64       v10; // mm3
+	simde__m64       v11; // mm1
+
+	if (len > 0)
 	{
+		v4 = dest;
+		v5 = src;
+		v6 = &dest[len];
+		v7 = simde_m_por(simde_m_punpcklbw(simde_mm_cvtsi32_si64(color & 0xFFFFFF), simde_mm_setzero_si64()), simde_m_psllqi(simde_mm_cvtsi32_si64(0x100u), 0x30u));
+		if (dest < v6)
 		{
-			tjs_int s_tmp = *src;
-			tjs_uint32 tmp =
-				((s_tmp * (c1    & 0xff00ffu) >> 6) & 0xff00ffu) + 
-				((s_tmp * (color & 0x00ff00u) >> 6) & 0x00ff00u);
-			s_tmp <<= (8u - 6);
-			s_tmp -= (s_tmp >> 8u); /* adjust alpha */
-			*dest = TVP_GL_FUNCNAME(TVPAddAlphaBlend_a_ca)(*dest, s_tmp, s_tmp ^ 0xffu, tmp);
-			src++;
-			dest++;
+			do
+			{
+				v9  = simde_mm_set1_pi16(*v5);
+				v10 = v9;
+				v11 = simde_m_punpcklbw(simde_mm_cvtsi32_si64(*v4), simde_mm_setzero_si64());
+				*v4 = simde_mm_cvtsi64_si32(
+					simde_m_packuswb(
+						simde_m_paddw(simde_m_psubw(v11, simde_m_psrlwi(simde_m_pmullw(v11, v10), 6u)), simde_m_psrlwi(simde_m_pmullw(v10, v7), 6u)),
+						simde_mm_setzero_si64()));
+				++v5;
+				++v4;
+			} while (v4 < v6);
 		}
 	}
+	simde_m_empty();
 }
 
 TVP_GL_FUNC_DECL(void, TVPApplyColorMap65_ao_c, (tjs_uint32 *dest, const tjs_uint8 *src, tjs_int len, tjs_uint32 color, tjs_int opa))
@@ -707,24 +807,39 @@ TVP_GL_FUNC_DECL(void, TVPApplyColorMap65_ao_c, (tjs_uint32 *dest, const tjs_uin
 
 TVP_GL_FUNC_DECL(void, TVPApplyColorMap65_d_c, (tjs_uint32 *dest, const tjs_uint8 *src, tjs_int len, tjs_uint32 color))
 {
-	tjs_uint32 d1, d, sopa, addr, destalpha;
-	tjs_uint32 c1 = color & 0xff00ffu;
-	color = color & 0x00ff00u;
-	for(int lu_n = 0; lu_n < len; lu_n++)
+	tjs_uint32 *     v4;  // edi
+	const tjs_uint8 *v5;  // ebp
+	tjs_uint32 *     v6;  // esi
+	simde__m64       v7;  // mm7
+	int              v8;  // eax
+	simde__m64       v9;  // mm1
+	simde__m64       v11; // mm4
+
+	if (len > 0)
 	{
+		v4 = dest;
+		v5 = src;
+		v6 = &dest[len];
+		v7 = simde_m_punpcklbw(simde_mm_cvtsi32_si64(color & 0xFFFFFF), simde_mm_setzero_si64());
+		if (dest < v6)
 		{
-			d = *dest;
-			addr = (*src<<8u) + (d>>24u);
-			destalpha = TVPNegativeMulTable65[addr]<<24u;
-			sopa = TVPOpacityOnOpacityTable65[addr];
-			d1 = d & 0xff00ffu;
-			d1 = (d1 + ((c1 - d1) * sopa >> 8u)) & 0xff00ffu;
-			d &= 0x00ff00u;
-			*dest = d1 + ((d + ((color - d) * sopa >> 8u)) & 0x00ff00u) + destalpha;
-			src++;
-			dest++;
+			do
+			{
+				v8  = (*v4 >> 24) + (*v5 << 8);
+				v9  = simde_m_punpcklbw(simde_m_psrlqi(simde_m_psllqi(simde_mm_cvtsi32_si64(*v4), 0x28u), 0x28u), simde_mm_setzero_si64());
+				v11 = simde_mm_set1_pi16(TVPOpacityOnOpacityTable65[v8]);
+				*v4 = (TVPNegativeMulTable65[v8] << 24) | simde_mm_cvtsi64_si32(
+															  simde_m_packuswb(
+																  simde_m_psrlwi(
+																	  simde_m_paddw(simde_m_psllwi(v9, 8u), simde_m_pmullw(simde_m_psubw(v7, v9), v11)),
+																	  8u),
+																  simde_mm_setzero_si64()));
+				++v5;
+				++v4;
+			} while (v4 < v6);
 		}
 	}
+	simde_m_empty();
 }
 
 TVP_GL_FUNC_DECL(void, TVPApplyColorMap65_do_c, (tjs_uint32 *dest, const tjs_uint8 *src, tjs_int len, tjs_uint32 color, tjs_int opa))
