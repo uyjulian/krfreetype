@@ -203,18 +203,12 @@ static void TVPLoadFont( FT_Open_Args& arg, std::vector<FontInfo*>& fonts, std::
 		FT_Error err = FT_Open_Face( FreeTypeLibrary, &arg, f, &face);
 		if( err == 0 ) {
 			face_num = face->num_faces;
-			std::string familyname(face->family_name);
+			std::string familyname;
+			if (face->family_name) familyname = face->family_name;
 			FontInfo* info = new FontInfo();
 			fonts.push_back( info );
 			tjs_string wname;
 			TVPEncodeUTF8ToUTF16( wname, familyname );
-			if( faces ) faces->push_back( wname );
-			if( fontmap ) {
-				tjs_uint styleflag = (face->style_flags&FT_STYLE_FLAG_ITALIC) ? TVP_TF_ITALIC : 0;
-				styleflag |= (face->style_flags&FT_STYLE_FLAG_BOLD ) ? TVP_TF_BOLD : 0;
-				fontmap->insert( std::map<FaceKey, FontInfo*>::value_type( FaceKey(wname,styleflag), info ) );
-			}
-			info->facename = wname;
 			if( path ) info->path = *path;
 			if( filename )
 			{
@@ -222,7 +216,7 @@ static void TVPLoadFont( FT_Open_Args& arg, std::vector<FontInfo*>& fonts, std::
 				info->file.reset(TVPCreateBinaryStreamForRead(info->filename.c_str(), TJS_W("")));
 			}
 			info->index = f;
-			info->stylename = std::string(face->style_name);
+			if (face->style_name) info->stylename = std::string(face->style_name);
 			info->num_glyphs = face->num_glyphs;
 			info->face_flags = face->face_flags;
 			info->style_flags = face->style_flags;
@@ -246,6 +240,9 @@ static void TVPLoadFont( FT_Open_Args& arg, std::vector<FontInfo*>& fonts, std::
 						info->aliases.push_back(
 							alias
 						);
+						if (wname.length() == 0) {
+							wname = alias;
+						}
 					}
 						break;
 					case TT_MS_ID_UNICODE_CS:
@@ -266,6 +263,9 @@ static void TVPLoadFont( FT_Open_Args& arg, std::vector<FontInfo*>& fonts, std::
 						info->aliases.push_back(
 							alias
 						);
+						if (wname.length() == 0) {
+							wname = alias;
+						}
 					}
 						break;
 					default:
@@ -274,6 +274,16 @@ static void TVPLoadFont( FT_Open_Args& arg, std::vector<FontInfo*>& fonts, std::
 					}
 				}
 			}
+			if (wname.length() > 0)
+			{
+				if( faces ) faces->push_back( wname );
+				if( fontmap ) {
+					tjs_uint styleflag = (face->style_flags&FT_STYLE_FLAG_ITALIC) ? TVP_TF_ITALIC : 0;
+					styleflag |= (face->style_flags&FT_STYLE_FLAG_BOLD ) ? TVP_TF_BOLD : 0;
+					fontmap->insert( std::map<FaceKey, FontInfo*>::value_type( FaceKey(wname,styleflag), info ) );
+				}
+			}
+			info->facename = wname;
 			int numcharmap = face->num_charmaps;
 			for (int c = 0; c < numcharmap; c++) {
 				FT_Encoding enc = face->charmaps[c]->encoding;
