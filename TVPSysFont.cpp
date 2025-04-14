@@ -82,11 +82,11 @@ void tTVPSysFont::InitializeMemDC() {
 	hMemDC_ = ::CreateCompatibleDC( NULL );
 	char * Bits;
 	hBmp_ = ::CreateDIBSection( NULL, &bmpinfo, DIB_RGB_COLORS, (void **)(&Bits), NULL, 0 );
-	hOldBmp_ = ::SelectObject( hMemDC_, hBmp_ );
+	hOldBmp_ = (HBITMAP)::SelectObject( hMemDC_, hBmp_ );
 }
 
-tTVPSysFont::tTVPSysFont() : hFont_(INVALID_HANDLE_VALUE), hOldFont_(INVALID_HANDLE_VALUE), hMemDC_(INVALID_HANDLE_VALUE),
-	hBmp_(INVALID_HANDLE_VALUE), hOldBmp_(INVALID_HANDLE_VALUE) {
+tTVPSysFont::tTVPSysFont() : hFont_((HFONT)INVALID_HANDLE_VALUE), hOldFont_((HFONT)INVALID_HANDLE_VALUE), hMemDC_((HDC)INVALID_HANDLE_VALUE),
+	hBmp_((HBITMAP)INVALID_HANDLE_VALUE), hOldBmp_((HBITMAP)INVALID_HANDLE_VALUE) {
 
 	InitializeMemDC();
 
@@ -102,8 +102,8 @@ tTVPSysFont::tTVPSysFont() : hFont_(INVALID_HANDLE_VALUE), hOldFont_(INVALID_HAN
 	logfont.lfStrikeOut = FALSE;
 	ApplyFont( &logfont );
 }
-tTVPSysFont::tTVPSysFont( const tTVPFont &font ) : hFont_(INVALID_HANDLE_VALUE), hOldFont_(INVALID_HANDLE_VALUE), hMemDC_(INVALID_HANDLE_VALUE),
-	hBmp_(INVALID_HANDLE_VALUE), hOldBmp_(INVALID_HANDLE_VALUE) {
+tTVPSysFont::tTVPSysFont( const tTVPFont &font ) : hFont_((HFONT)INVALID_HANDLE_VALUE), hOldFont_((HFONT)INVALID_HANDLE_VALUE), hMemDC_((HDC)INVALID_HANDLE_VALUE),
+	hBmp_((HBITMAP)INVALID_HANDLE_VALUE), hOldBmp_((HBITMAP)INVALID_HANDLE_VALUE) {
 
 	InitializeMemDC();
 
@@ -174,12 +174,12 @@ bool tTVPSysFont::ApplyFont( const LOGFONT* info ) {
 	HFONT hFont = ::CreateFontIndirect( info );
 	if( hFont == nullptr ) return false;
 	if( hFont_ != INVALID_HANDLE_VALUE ) {
-		HFONT hOld = ::SelectObject( hMemDC_, hFont );
+		HFONT hOld = (HFONT)::SelectObject( hMemDC_, hFont );
 		//assert( hOld == hFont_ );
 		::DeleteObject( hOld );
 		hFont_ = hFont;
 	} else {
-		hOldFont_ = ::SelectObject( hMemDC_, hFont );
+		hOldFont_ = (HFONT)::SelectObject( hMemDC_, hFont );
 		hFont_ = hFont;
 	}
 	return true;
