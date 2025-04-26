@@ -29,6 +29,7 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <cstdint>
 
 #ifdef _MSC_VER
 #pragma warning(push)
